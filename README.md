@@ -1,7 +1,10 @@
 # Exposure Api
 This project is a security-focused API designed to ingest and analyze data exposure incidents. It offers two core functionalities: an endpoint to save the details of new credential leaks, and a system to calculate a cumulative criticality score for each user. This allows teams to proactively monitor and prioritize users based on their evolving risk profile.
 
-### Build docker image:
+### Pull the project
+	You know.. just clone the thing
+
+### Build docker image (inside the projec):
 	docker build -t python-api .
 
 ### Run docker container:
