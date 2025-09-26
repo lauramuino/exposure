@@ -13,6 +13,6 @@
 
 # A curl example:
 
-curl -X POST "http://127.0.0.1:8000/exposures/" \
+curl -X POST "http://127.0.0.1:8000/exposures" \
 -H "Content-Type: application/json" \
--d '{"id": "a4s81o3e-7c3b-4e0d-9b5f-2s4k7d6e4b8f", "email": "javier.gutierrez@gmail.com", "source_info": {"source": "data breach", "severity": "high"}, "detected_at": "2025-09-16T18:50:13.262Z", "created_at": "2025-09-16T18:54:13.262Z"}'
+-d '{"id": "a458103e-7c3b-4e0d-9b5f-25417d6e4b8f", "email": "javier.gutierrez@gmail.com", "source_info": {"source": "data breach", "severity": "high"}, "detected_at": "2025-09-16T18:50:13.262Z", "created_at": "2025-09-16T18:54:13.262Z"}'
