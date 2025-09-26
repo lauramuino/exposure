@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from . import models, schemas
 from .database import SessionLocal, engine, Base
 from .schemas import ExposureEvent 
+from .models import ExposureEventDB
 
 # Dependency injection?? to get a DB session
 #This is a standard FastAPI pattern to manage database sessions for each API request.
