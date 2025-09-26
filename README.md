@@ -1,3 +1,6 @@
+# Exposure Api
+This project is a security-focused API designed to ingest and analyze data exposure incidents. It offers two core functionalities: an endpoint to save the details of new credential leaks, and a system to calculate a cumulative criticality score for each user. This allows teams to proactively monitor and prioritize users based on their evolving risk profile.
+
 ### Build docker image:
 	docker build -t python-api .
 
@@ -22,3 +25,5 @@ curl -X POST "http://127.0.0.1:8000/exposures" \
 curl "http://127.0.0.1:8000/criticality-score?javier.gutierrez@gmail.com"
 curl "http://127.0.0.1:8000/criticality-score"
 
+### About the bonus
+For a bonus, an idea was to integrate the 'Have I Been Pwned?' API. This would have allowed us to check a user's entire public breach history the first time we see them. Instead of their risk score starting from zero, it would immediately reflect their past exposures, giving the security team a much more accurate risk assessment from day one.
