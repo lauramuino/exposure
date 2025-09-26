@@ -7,6 +7,23 @@ import json
 from datetime import datetime
 from collections import defaultdict
 
+#todo: move to other place
+def _calculate_new_score(old_score: int, severity: str, source: str) -> int:
+    """Calculates a new user criticality score."""
+    source = source.lower() if source else ""
+    severity = severity.lower() if severity else ""
+
+    if source == "malware":
+        return 10
+    
+    if severity == 'high':
+        return min(10, old_score + 3)
+    elif severity == 'low':
+        return min(10, old_score + 1)
+    else:
+        return old_score
+
+
 # Dependency injection?? to get a DB session
 #This is a standard FastAPI pattern to manage database sessions for each API request.
 #how does fast api manages lifecycles??
@@ -89,10 +106,13 @@ def on_startup():
 async def read_root():
     return {"message": "Hello, World! Your API is up and running."}
 
+
+
+
 @app.post("/exposures", status_code=201)
 async def create_exposure_event(exposure: ExposureEvent, db: Session = Depends(get_db)):
     """
-    An endpoint to load new exposed credentials and save them to the database.
+    An endpoint to load new exposed credentials and save event to the database.
     """
     db_event = ExposureEventDB(
         id=exposure.id,
@@ -103,7 +123,34 @@ async def create_exposure_event(exposure: ExposureEvent, db: Session = Depends(g
         created_at=exposure.created_at
     )
     db.add(db_event)
+
+
+    user_score_record = db.query(UserCriticalityScore).filter(UserCriticalityScore.email == exposure.email).first()
+
+    if user_score_record:
+        new_score = _calculate_new_score(
+            old_score=user_score_record.score,
+            severity=exposure.source_info.severity,
+            source=exposure.source_info.source
+        )
+        user_score_record.score = new_score
+        user_score_record.times_reported += 1
+    else:
+        initial_score = _calculate_new_score(
+            old_score=0, 
+            severity=exposure.source_info.severity,
+            source=exposure.source_info.source
+        )
+        user_score_record = UserCriticalityScore(
+            email=exposure.email,
+            score=initial_score,
+            times_reported=1
+        )
+        db.add(user_score_record)
+
     db.commit()
+    
     db.refresh(db_event)
+    db.refresh(user_score_record)
     
     return {"message": "Leak event loaded successfully", "event_id": db_event.id}
