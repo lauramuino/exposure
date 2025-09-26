@@ -1,1 +1,6 @@
+# sensitive info
 .env
+
+# Python
+__pycache__/
+*.pyc
