@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Integer, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from uuid import uuid4
 from .database import Base
@@ -13,4 +13,11 @@ class ExposureEventDB(Base):
     detected_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, nullable=False)
 
-#sql alchemy database model (the info about the event as a single table for now)
+class UserCriticalityScore(Base):
+    __tablename__ = "user_criticality_score"
+
+    email = Column(String, index=True, nullable=False, primary_key=True)
+    score = Column(Integer, CheckConstraint('score >= 0 AND score <= 10', name='score_check'), nullable=False)
+    times_reported = Column(Integer, nullable=False)
+
+#sql alchemy database model 

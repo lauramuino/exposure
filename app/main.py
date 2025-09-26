@@ -2,9 +2,10 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine, Base
 from .schemas import ExposureEvent 
-from .models import ExposureEventDB
+from .models import ExposureEventDB, UserCriticalityScore
 import json
 from datetime import datetime
+from collections import defaultdict
 
 # Dependency injection?? to get a DB session
 #This is a standard FastAPI pattern to manage database sessions for each API request.
@@ -23,39 +24,66 @@ app = FastAPI(
     version="1.0.1"
 )
 
-#this ensures that exposure_events table is created when the application starts
+#this ensures that tables under Base are created when the application starts
 @app.on_event("startup")
 def on_startup():
     print("Creating tables...")
     Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
 
-    try:
+    with SessionLocal() as db:
         data_count = db.query(ExposureEventDB).count()
         if data_count == 0:
             print("No events found, loading initial info..")
             
-            with open("/exposure-app/app/alerts.json", "r") as f:
-                data = json.load(f)
+            try:
+                with open("/exposure-app/app/alerts.json", "r") as f:
+                    data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                print(f"Error reading alerts.json: {e}")
+                return
+
+            user_scores = defaultdict(int)
+            times_reported = defaultdict(int)
 
             for alert in data["alerts"]:
+                email = alert["email"]
+                source_info = alert["source_info"]
+                source = source_info.get("source")
+
+                if source == "malware":
+                    user_scores[email] = 10
+                else:
+                    severity = source_info.get("severity")
+                    if severity == "high":
+                        user_scores[email] += 3
+                    else:
+                        user_scores[email] += 1
+
+                times_reported[alert["email"]] +=1
+
                 new_event = ExposureEventDB(
                     id=alert["id"],
-                    email=alert["email"],
+                    email=email,
                     source=alert["source_info"]["source"],
                     severity=alert["source_info"].get("severity", "high"),
                     detected_at=datetime.fromisoformat(alert["detected_at"].replace("Z", "+00:00")),
                     created_at=datetime.fromisoformat(alert["created_at"].replace("Z", "+00:00")),
                 )
                 db.add(new_event)
-     
+
+            for email, score in user_scores.items():
+                new_event = UserCriticalityScore(
+                    email = email,
+                    score = min(score,10) ,
+                    times_reported = times_reported[email]
+                )
+                db.add(new_event)
+
             db.commit()
             print(f"Successfully loaded {len(data['alerts'])} records.")
         else:
             print("Db already loaded, skipping")
 
-    finally:
-        db.close()
 
 @app.get("/")
 async def read_root():
