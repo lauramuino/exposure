@@ -1,0 +1,14 @@
+# Git files
+.git
+.gitignore
+
+# Docker files
+.dockerignore
+docker-compose.yml
+
+# Secret stuff
+.env
+
+# Python
+__pycache__/
+*.pyc
