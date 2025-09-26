@@ -154,3 +154,23 @@ async def create_exposure_event(exposure: ExposureEvent, db: Session = Depends(g
     db.refresh(user_score_record)
     
     return {"message": "Leak event loaded successfully", "event_id": db_event.id}
+
+
+
+@app.get("/criticality-score")
+async def get_user_criticality_score(email: str | None = None, db: Session = Depends(get_db)):
+    """
+    An enpoint to consult criticality scores for a user, or top 3 scores if no mail is provided.
+    """
+    if email is not None:
+        user_score = db.query(UserCriticalityScore).filter(UserCriticalityScore.email == email).first()
+        
+        if not user_score:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User email '{email}' not found."
+            )
+        return user_score
+    else:
+        top_users = db.query(UserCriticalityScore).order_by(UserCriticalityScore.score.desc()).limit(3).all()
+        return top_users

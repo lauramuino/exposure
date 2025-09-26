@@ -17,7 +17,7 @@ class UserCriticalityScore(Base):
     __tablename__ = "user_criticality_score"
 
     email = Column(String, index=True, nullable=False, primary_key=True)
-    score = Column(Integer, CheckConstraint('score >= 0 AND score <= 10', name='score_check'), nullable=False)
+    score = Column(Integer, CheckConstraint('score >= 0 AND score <= 10', name='score_check'), nullable=False)    
     times_reported = Column(Integer, nullable=False)
 
 #sql alchemy database model 
