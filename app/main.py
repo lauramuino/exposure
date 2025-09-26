@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal, engine, Base
 from .schemas import ExposureEvent 
 from .models import ExposureEventDB
+import json
+from datetime import datetime
 
 # Dependency injection?? to get a DB session
 #This is a standard FastAPI pattern to manage database sessions for each API request.
@@ -17,16 +19,43 @@ def get_db():
 
 app = FastAPI(
     title="Exposure API",
-    description="User scoring service for exposed credentals.",
+    description="User scoring service for exposed credentals",
     version="1.0.1"
 )
 
-#function ensures that the necessary database tables are created when the application starts.
-#again, check how the lifecycle works
+#this ensures that exposure_events table is created when the application starts
 @app.on_event("startup")
 def on_startup():
-    # Create database tables on startup
+    print("Creating tables...")
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+
+    try:
+        data_count = db.query(ExposureEventDB).count()
+        if data_count == 0:
+            print("No events found, loading initial info..")
+            
+            with open("/exposure-app/app/alerts.json", "r") as f:
+                data = json.load(f)
+
+            for alert in data["alerts"]:
+                new_event = ExposureEventDB(
+                    id=alert["id"],
+                    email=alert["email"],
+                    source=alert["source_info"]["source"],
+                    severity=alert["source_info"].get("severity", "high"),
+                    detected_at=datetime.fromisoformat(alert["detected_at"].replace("Z", "+00:00")),
+                    created_at=datetime.fromisoformat(alert["created_at"].replace("Z", "+00:00")),
+                )
+                db.add(new_event)
+     
+            db.commit()
+            print(f"Successfully loaded {len(data['alerts'])} records.")
+        else:
+            print("Db already loaded, skipping")
+
+    finally:
+        db.close()
 
 @app.get("/")
 async def read_root():

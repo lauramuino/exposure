@@ -1,17 +1,17 @@
-# Build docker image:
+### Build docker image:
 	docker build -t python-api .
 
-# Run docker container:
+### Run docker container:
 	docker run -d -p 8000:8000 python-api
 
-# Access api endpoints:
+### Access api endpoints:
 	http://localhost:8000/exposures
 
-# Access automatically generated documentation:
+### Access automatically generated documentation:
 	http://localhost:8000/redoc
 	http://localhost:8000/docs
 
-# A curl example:
+### A curl example:
 
 curl -X POST "http://127.0.0.1:8000/exposures" \
 -H "Content-Type: application/json" \
